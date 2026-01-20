@@ -1,0 +1,535 @@
+import {
+  Workspace,
+  User,
+  RequirementsLibraryItem,
+  GateDef,
+  GateRun,
+  Product,
+  MediaSet,
+  ListingDraft,
+  MerchantFeedRow,
+  WarTask,
+  Activity,
+} from './types';
+
+// Workspace
+export const seedWorkspace: Workspace = {
+  id: 'ws-001',
+  name: 'ModaFlex Brasil',
+  cnpj: '12.345.678/0001-90',
+  legalName: 'ModaFlex Comércio de Vestuário LTDA',
+  tradeName: 'ModaFlex',
+  address: 'Rua das Flores, 123 - São Paulo, SP - 01234-567',
+};
+
+// Users
+export const seedUsers: User[] = [
+  { id: 'usr-001', name: 'Ana Silva', email: 'ana@modaflex.com', role: 'admin', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ana' },
+  { id: 'usr-002', name: 'Carlos Santos', email: 'carlos@modaflex.com', role: 'cadastro', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos' },
+  { id: 'usr-003', name: 'Maria Oliveira', email: 'maria@modaflex.com', role: 'catalogo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria' },
+  { id: 'usr-004', name: 'João Pereira', email: 'joao@modaflex.com', role: 'auditor', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' },
+];
+
+// Requirements Library
+export const seedRequirements: RequirementsLibraryItem[] = [
+  {
+    id: 'req-ml',
+    marketplaceKey: 'mercadolivre',
+    accountType: 'PJ',
+    country: 'BR',
+    lastReviewedAt: '2024-01-15T10:00:00Z',
+    requirements: [
+      { key: 'cnpj', name: 'CNPJ Ativo', desc: 'CNPJ regularizado na Receita Federal', evidenceTypes: ['document', 'screenshot'], status: 'verified', sourceLinks: ['https://servicos.receita.fazenda.gov.br/'] },
+      { key: 'contrato_social', name: 'Contrato Social', desc: 'Última alteração do contrato social', evidenceTypes: ['document'], status: 'verified', sourceLinks: [] },
+      { key: 'conta_bancaria_pj', name: 'Conta Bancária PJ', desc: 'Comprovante de titularidade da conta', evidenceTypes: ['document', 'screenshot'], status: 'uploaded', sourceLinks: [] },
+      { key: 'endereco_comercial', name: 'Endereço Comercial', desc: 'Comprovante de endereço em nome da empresa', evidenceTypes: ['document'], status: 'missing', sourceLinks: [] },
+      { key: 'nota_fiscal', name: 'Emissão de NF-e', desc: 'Demonstrar capacidade de emissão de NF-e', evidenceTypes: ['document', 'screenshot'], status: 'missing', sourceLinks: [] },
+    ],
+  },
+  {
+    id: 'req-shopee',
+    marketplaceKey: 'shopee',
+    accountType: 'PJ',
+    country: 'BR',
+    lastReviewedAt: '2024-01-15T10:00:00Z',
+    requirements: [
+      { key: 'cnpj', name: 'CNPJ Ativo', desc: 'CNPJ regularizado na Receita Federal', evidenceTypes: ['document', 'screenshot'], status: 'verified', sourceLinks: [] },
+      { key: 'rg_socio', name: 'RG do Sócio', desc: 'Documento de identidade do sócio administrador', evidenceTypes: ['document'], status: 'uploaded', sourceLinks: [] },
+      { key: 'selfie_socio', name: 'Selfie do Sócio', desc: 'Selfie segurando documento', evidenceTypes: ['photo'], status: 'missing', sourceLinks: [] },
+      { key: 'conta_bancaria', name: 'Conta Bancária', desc: 'Dados bancários para recebimento', evidenceTypes: ['document'], status: 'missing', sourceLinks: [] },
+    ],
+  },
+];
+
+// Gate Definitions
+export const seedGateDefs: GateDef[] = [
+  // Mercado Livre Gates
+  { id: 'gate-ml-1', marketplaceKey: 'mercadolivre', gateKey: 'company_ready', name: 'Empresa Pronta', order: 1, requiresAuditor: false, checklist: [{ key: 'cnpj_valid', label: 'CNPJ validado na RF', required: true }, { key: 'docs_uploaded', label: 'Documentos básicos enviados', required: true }], evidenceTypes: ['document', 'screenshot'] },
+  { id: 'gate-ml-2', marketplaceKey: 'mercadolivre', gateKey: 'store_created', name: 'Loja Criada', order: 2, requiresAuditor: false, checklist: [{ key: 'account_created', label: 'Conta criada no ML', required: true }, { key: 'pj_verified', label: 'Verificação PJ iniciada', required: true }], evidenceTypes: ['screenshot', 'link'] },
+  { id: 'gate-ml-3', marketplaceKey: 'mercadolivre', gateKey: 'store_approved', name: 'Loja Aprovada', order: 3, requiresAuditor: true, checklist: [{ key: 'verification_complete', label: 'Verificação PJ completa', required: true }, { key: 'reputation_active', label: 'Reputação ativada', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-ml-4', marketplaceKey: 'mercadolivre', gateKey: 'logistics', name: 'Logística Configurada', order: 4, requiresAuditor: false, checklist: [{ key: 'fulfillment_choice', label: 'Opção de fulfillment definida', required: true }, { key: 'shipping_zones', label: 'Zonas de envio configuradas', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-ml-5', marketplaceKey: 'mercadolivre', gateKey: 'payout', name: 'Pagamento Configurado', order: 5, requiresAuditor: true, checklist: [{ key: 'bank_linked', label: 'Conta bancária vinculada', required: true }, { key: 'payout_test', label: 'Teste de saque realizado', required: false }], evidenceTypes: ['screenshot', 'document'] },
+  { id: 'gate-ml-6', marketplaceKey: 'mercadolivre', gateKey: 'sku_ready', name: 'SKUs Prontos', order: 6, requiresAuditor: false, checklist: [{ key: 'products_imported', label: 'Produtos importados', required: true }, { key: 'inventory_synced', label: 'Estoque sincronizado', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-ml-7', marketplaceKey: 'mercadolivre', gateKey: 'listing_ready', name: 'Anúncios Prontos', order: 7, requiresAuditor: false, checklist: [{ key: 'listings_created', label: 'Anúncios criados', required: true }, { key: 'quality_score', label: 'Score de qualidade > 80%', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-ml-8', marketplaceKey: 'mercadolivre', gateKey: 'publish', name: 'Publicação', order: 8, requiresAuditor: true, checklist: [{ key: 'final_review', label: 'Revisão final aprovada', required: true }, { key: 'go_live', label: 'Autorização para publicar', required: true }], evidenceTypes: ['screenshot'] },
+
+  // Shopee Gates
+  { id: 'gate-sh-1', marketplaceKey: 'shopee', gateKey: 'company_ready', name: 'Empresa Pronta', order: 1, requiresAuditor: false, checklist: [{ key: 'cnpj_valid', label: 'CNPJ validado', required: true }, { key: 'docs_ready', label: 'Documentos preparados', required: true }], evidenceTypes: ['document'] },
+  { id: 'gate-sh-2', marketplaceKey: 'shopee', gateKey: 'store_created', name: 'Loja Criada', order: 2, requiresAuditor: false, checklist: [{ key: 'seller_registered', label: 'Cadastro de vendedor feito', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-3', marketplaceKey: 'shopee', gateKey: 'store_approved', name: 'Loja Aprovada', order: 3, requiresAuditor: true, checklist: [{ key: 'kyc_approved', label: 'KYC aprovado', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-4', marketplaceKey: 'shopee', gateKey: 'logistics', name: 'Logística', order: 4, requiresAuditor: false, checklist: [{ key: 'shipping_setup', label: 'Frete configurado', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-5', marketplaceKey: 'shopee', gateKey: 'payout', name: 'Pagamento', order: 5, requiresAuditor: true, checklist: [{ key: 'wallet_setup', label: 'Carteira configurada', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-6', marketplaceKey: 'shopee', gateKey: 'sku_ready', name: 'SKUs Prontos', order: 6, requiresAuditor: false, checklist: [{ key: 'products_listed', label: 'Produtos listados', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-7', marketplaceKey: 'shopee', gateKey: 'listing_ready', name: 'Anúncios Prontos', order: 7, requiresAuditor: false, checklist: [{ key: 'listings_ok', label: 'Anúncios validados', required: true }], evidenceTypes: ['screenshot'] },
+  { id: 'gate-sh-8', marketplaceKey: 'shopee', gateKey: 'publish', name: 'Publicação', order: 8, requiresAuditor: true, checklist: [{ key: 'final_ok', label: 'Aprovação final', required: true }], evidenceTypes: ['screenshot'] },
+];
+
+// Gate Runs
+export const seedGateRuns: GateRun[] = [
+  // ML Gates
+  { id: 'gr-ml-1', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'company_ready', gateName: 'Empresa Pronta', status: 'approved', checks: { cnpj_valid: true, docs_uploaded: true }, evidence: [{ id: 'ev-1', type: 'document', filename: 'cnpj_comprovante.pdf', urlMock: '/mock/cnpj.pdf', uploadedAt: '2024-01-10T10:00:00Z' }], approvedBy: 'usr-004', approvedAt: '2024-01-11T14:00:00Z', order: 1 },
+  { id: 'gr-ml-2', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'store_created', gateName: 'Loja Criada', status: 'approved', checks: { account_created: true, pj_verified: true }, evidence: [{ id: 'ev-2', type: 'screenshot', filename: 'ml_account.png', urlMock: '/mock/ml.png', uploadedAt: '2024-01-12T10:00:00Z' }], order: 2 },
+  { id: 'gr-ml-3', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'store_approved', gateName: 'Loja Aprovada', status: 'submitted', checks: { verification_complete: true, reputation_active: true }, evidence: [{ id: 'ev-3', type: 'screenshot', filename: 'ml_verified.png', urlMock: '/mock/ml2.png', uploadedAt: '2024-01-14T10:00:00Z' }], order: 3 },
+  { id: 'gr-ml-4', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'logistics', gateName: 'Logística Configurada', status: 'locked', checks: {}, evidence: [], order: 4 },
+  { id: 'gr-ml-5', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'payout', gateName: 'Pagamento Configurado', status: 'locked', checks: {}, evidence: [], order: 5 },
+  { id: 'gr-ml-6', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'sku_ready', gateName: 'SKUs Prontos', status: 'locked', checks: {}, evidence: [], order: 6 },
+  { id: 'gr-ml-7', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'listing_ready', gateName: 'Anúncios Prontos', status: 'locked', checks: {}, evidence: [], order: 7 },
+  { id: 'gr-ml-8', workspaceId: 'ws-001', marketplaceKey: 'mercadolivre', gateKey: 'publish', gateName: 'Publicação', status: 'locked', checks: {}, evidence: [], order: 8 },
+
+  // Shopee Gates
+  { id: 'gr-sh-1', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'company_ready', gateName: 'Empresa Pronta', status: 'approved', checks: { cnpj_valid: true, docs_ready: true }, evidence: [], approvedAt: '2024-01-11T14:00:00Z', order: 1 },
+  { id: 'gr-sh-2', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'store_created', gateName: 'Loja Criada', status: 'in_progress', checks: { seller_registered: false }, evidence: [], order: 2 },
+  { id: 'gr-sh-3', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'store_approved', gateName: 'Loja Aprovada', status: 'locked', checks: {}, evidence: [], order: 3 },
+  { id: 'gr-sh-4', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'logistics', gateName: 'Logística', status: 'locked', checks: {}, evidence: [], order: 4 },
+  { id: 'gr-sh-5', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'payout', gateName: 'Pagamento', status: 'locked', checks: {}, evidence: [], order: 5 },
+  { id: 'gr-sh-6', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'sku_ready', gateName: 'SKUs Prontos', status: 'locked', checks: {}, evidence: [], order: 6 },
+  { id: 'gr-sh-7', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'listing_ready', gateName: 'Anúncios Prontos', status: 'locked', checks: {}, evidence: [], order: 7 },
+  { id: 'gr-sh-8', workspaceId: 'ws-001', marketplaceKey: 'shopee', gateKey: 'publish', gateName: 'Publicação', status: 'locked', checks: {}, evidence: [], order: 8 },
+];
+
+// Products
+export const seedProducts: Product[] = [
+  {
+    id: 'prod-001',
+    skuMaster: 'MF-CAMISETA-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Camiseta Básica Algodão Premium',
+    description: 'Camiseta básica em algodão premium 100%, corte regular fit.',
+    materials: ['100% Algodão'],
+    variants: [
+      { size: 'P', color: 'Branco', skuVariant: 'MF-CAM-001-P-BR' },
+      { size: 'M', color: 'Branco', skuVariant: 'MF-CAM-001-M-BR' },
+      { size: 'G', color: 'Branco', skuVariant: 'MF-CAM-001-G-BR' },
+      { size: 'P', color: 'Preto', skuVariant: 'MF-CAM-001-P-PT' },
+      { size: 'M', color: 'Preto', skuVariant: 'MF-CAM-001-M-PT' },
+      { size: 'G', color: 'Preto', skuVariant: 'MF-CAM-001-G-PT' },
+    ],
+    dims: { weight_g: 180, length_cm: 30, width_cm: 25, height_cm: 2 },
+    priceBRL: 79.9,
+    costBRL: 25.0,
+    inventory: [
+      { skuVariant: 'MF-CAM-001-P-BR', qty: 50 },
+      { skuVariant: 'MF-CAM-001-M-BR', qty: 100 },
+      { skuVariant: 'MF-CAM-001-G-BR', qty: 75 },
+      { skuVariant: 'MF-CAM-001-P-PT', qty: 45 },
+      { skuVariant: 'MF-CAM-001-M-PT', qty: 120 },
+      { skuVariant: 'MF-CAM-001-G-PT', qty: 80 },
+    ],
+    mediaSetId: 'ms-001',
+    category: 'Vestuário > Camisetas',
+    createdAt: '2024-01-05T10:00:00Z',
+    updatedAt: '2024-01-15T14:00:00Z',
+  },
+  {
+    id: 'prod-002',
+    skuMaster: 'MF-CALCA-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Calça Jeans Slim Fit',
+    description: 'Calça jeans com elastano, modelagem slim fit moderna.',
+    materials: ['98% Algodão', '2% Elastano'],
+    variants: [
+      { size: '38', color: 'Azul Escuro', skuVariant: 'MF-CAL-001-38-AE' },
+      { size: '40', color: 'Azul Escuro', skuVariant: 'MF-CAL-001-40-AE' },
+      { size: '42', color: 'Azul Escuro', skuVariant: 'MF-CAL-001-42-AE' },
+      { size: '44', color: 'Azul Escuro', skuVariant: 'MF-CAL-001-44-AE' },
+    ],
+    dims: { weight_g: 450, length_cm: 40, width_cm: 30, height_cm: 5 },
+    priceBRL: 189.9,
+    costBRL: 65.0,
+    inventory: [
+      { skuVariant: 'MF-CAL-001-38-AE', qty: 30 },
+      { skuVariant: 'MF-CAL-001-40-AE', qty: 45 },
+      { skuVariant: 'MF-CAL-001-42-AE', qty: 40 },
+      { skuVariant: 'MF-CAL-001-44-AE', qty: 25 },
+    ],
+    mediaSetId: 'ms-002',
+    category: 'Vestuário > Calças',
+    createdAt: '2024-01-06T10:00:00Z',
+    updatedAt: '2024-01-15T14:00:00Z',
+  },
+  {
+    id: 'prod-003',
+    skuMaster: 'MF-VESTIDO-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Vestido Midi Floral',
+    description: 'Vestido midi com estampa floral, tecido fluido e confortável.',
+    materials: ['100% Viscose'],
+    variants: [
+      { size: 'P', color: 'Floral Azul', skuVariant: 'MF-VES-001-P-FA' },
+      { size: 'M', color: 'Floral Azul', skuVariant: 'MF-VES-001-M-FA' },
+      { size: 'G', color: 'Floral Azul', skuVariant: 'MF-VES-001-G-FA' },
+    ],
+    dims: { weight_g: 220, length_cm: 45, width_cm: 35, height_cm: 3 },
+    priceBRL: 159.9,
+    costBRL: 48.0,
+    inventory: [
+      { skuVariant: 'MF-VES-001-P-FA', qty: 20 },
+      { skuVariant: 'MF-VES-001-M-FA', qty: 35 },
+      { skuVariant: 'MF-VES-001-G-FA', qty: 25 },
+    ],
+    mediaSetId: 'ms-003',
+    category: 'Vestuário > Vestidos',
+    createdAt: '2024-01-07T10:00:00Z',
+    updatedAt: '2024-01-14T14:00:00Z',
+  },
+  {
+    id: 'prod-004',
+    skuMaster: 'MF-KIT-001',
+    recipe: 'kit',
+    brand: 'ModaFlex',
+    titleBase: 'Kit 3 Cuecas Boxer',
+    description: 'Kit com 3 cuecas boxer em algodão com elastano.',
+    materials: ['95% Algodão', '5% Elastano'],
+    variants: [
+      { size: 'P', color: 'Sortido', skuVariant: 'MF-KIT-001-P' },
+      { size: 'M', color: 'Sortido', skuVariant: 'MF-KIT-001-M' },
+      { size: 'G', color: 'Sortido', skuVariant: 'MF-KIT-001-G' },
+    ],
+    dims: { weight_g: 150, length_cm: 20, width_cm: 15, height_cm: 5 },
+    priceBRL: 69.9,
+    costBRL: 22.0,
+    inventory: [
+      { skuVariant: 'MF-KIT-001-P', qty: 60 },
+      { skuVariant: 'MF-KIT-001-M', qty: 80 },
+      { skuVariant: 'MF-KIT-001-G', qty: 55 },
+    ],
+    category: 'Vestuário > Underwear',
+    createdAt: '2024-01-08T10:00:00Z',
+    updatedAt: '2024-01-12T14:00:00Z',
+  },
+  {
+    id: 'prod-005',
+    skuMaster: 'MF-MOLETOM-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Moletom Canguru Unissex',
+    description: 'Moletom canguru com capuz, tecido flanelado interno.',
+    materials: ['80% Algodão', '20% Poliéster'],
+    variants: [
+      { size: 'P', color: 'Cinza Mescla', skuVariant: 'MF-MOL-001-P-CM' },
+      { size: 'M', color: 'Cinza Mescla', skuVariant: 'MF-MOL-001-M-CM' },
+      { size: 'G', color: 'Cinza Mescla', skuVariant: 'MF-MOL-001-G-CM' },
+      { size: 'GG', color: 'Cinza Mescla', skuVariant: 'MF-MOL-001-GG-CM' },
+    ],
+    dims: { weight_g: 520, length_cm: 45, width_cm: 40, height_cm: 6 },
+    priceBRL: 149.9,
+    costBRL: 52.0,
+    inventory: [
+      { skuVariant: 'MF-MOL-001-P-CM', qty: 25 },
+      { skuVariant: 'MF-MOL-001-M-CM', qty: 40 },
+      { skuVariant: 'MF-MOL-001-G-CM', qty: 35 },
+      { skuVariant: 'MF-MOL-001-GG-CM', qty: 20 },
+    ],
+    category: 'Vestuário > Moletons',
+    createdAt: '2024-01-09T10:00:00Z',
+    updatedAt: '2024-01-13T14:00:00Z',
+  },
+  {
+    id: 'prod-006',
+    skuMaster: 'MF-SHORTS-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Shorts Tactel Esportivo',
+    materials: ['100% Poliéster'],
+    variants: [
+      { size: 'P', color: 'Preto', skuVariant: 'MF-SHO-001-P-PT' },
+      { size: 'M', color: 'Preto', skuVariant: 'MF-SHO-001-M-PT' },
+    ],
+    dims: { weight_g: 120, length_cm: 25, width_cm: 20, height_cm: 2 },
+    priceBRL: 59.9,
+    costBRL: 18.0,
+    inventory: [
+      { skuVariant: 'MF-SHO-001-P-PT', qty: 40 },
+      { skuVariant: 'MF-SHO-001-M-PT', qty: 55 },
+    ],
+    category: 'Vestuário > Shorts',
+    createdAt: '2024-01-10T10:00:00Z',
+    updatedAt: '2024-01-10T10:00:00Z',
+  },
+  {
+    id: 'prod-007',
+    skuMaster: 'MF-BLAZER-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Blazer Social Slim',
+    materials: ['70% Poliéster', '28% Viscose', '2% Elastano'],
+    variants: [
+      { size: '48', color: 'Preto', skuVariant: 'MF-BLA-001-48-PT' },
+      { size: '50', color: 'Preto', skuVariant: 'MF-BLA-001-50-PT' },
+      { size: '52', color: 'Preto', skuVariant: 'MF-BLA-001-52-PT' },
+    ],
+    dims: { weight_g: 450, length_cm: 60, width_cm: 50, height_cm: 5 },
+    priceBRL: 299.9,
+    costBRL: 95.0,
+    inventory: [
+      { skuVariant: 'MF-BLA-001-48-PT', qty: 15 },
+      { skuVariant: 'MF-BLA-001-50-PT', qty: 20 },
+      { skuVariant: 'MF-BLA-001-52-PT', qty: 12 },
+    ],
+    category: 'Vestuário > Blazers',
+    createdAt: '2024-01-11T10:00:00Z',
+    updatedAt: '2024-01-11T10:00:00Z',
+  },
+  {
+    id: 'prod-008',
+    skuMaster: 'MF-REGATA-001',
+    recipe: 'apparel',
+    brand: 'ModaFlex',
+    titleBase: 'Regata Fitness Dry Fit',
+    materials: ['100% Poliamida'],
+    variants: [
+      { size: 'P', color: 'Rosa', skuVariant: 'MF-REG-001-P-RS' },
+      { size: 'M', color: 'Rosa', skuVariant: 'MF-REG-001-M-RS' },
+      { size: 'G', color: 'Rosa', skuVariant: 'MF-REG-001-G-RS' },
+    ],
+    dims: { weight_g: 100, length_cm: 28, width_cm: 22, height_cm: 1 },
+    priceBRL: 49.9,
+    costBRL: 15.0,
+    inventory: [
+      { skuVariant: 'MF-REG-001-P-RS', qty: 35 },
+      { skuVariant: 'MF-REG-001-M-RS', qty: 50 },
+      { skuVariant: 'MF-REG-001-G-RS', qty: 40 },
+    ],
+    category: 'Vestuário > Fitness',
+    createdAt: '2024-01-12T10:00:00Z',
+    updatedAt: '2024-01-12T10:00:00Z',
+  },
+];
+
+// Media Sets
+export const seedMediaSets: MediaSet[] = [
+  {
+    id: 'ms-001',
+    productId: 'prod-001',
+    photos: [
+      { id: 'ph-001', role: 'hero', track: 'listing_safe', urlMock: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', filename: 'camiseta_hero.jpg' },
+      { id: 'ph-002', role: 'detail', track: 'listing_safe', urlMock: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400', filename: 'camiseta_detail.jpg' },
+    ],
+    videos: [],
+    report: { score: 85, issues: ['Falta foto de variante preta'] },
+  },
+  {
+    id: 'ms-002',
+    productId: 'prod-002',
+    photos: [
+      { id: 'ph-003', role: 'hero', track: 'listing_safe', urlMock: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400', filename: 'calca_hero.jpg' },
+    ],
+    videos: [],
+    report: { score: 65, issues: ['Apenas 1 foto', 'Sem foto de detalhe do tecido'] },
+  },
+  {
+    id: 'ms-003',
+    productId: 'prod-003',
+    photos: [
+      { id: 'ph-004', role: 'hero', track: 'listing_safe', urlMock: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400', filename: 'vestido_hero.jpg' },
+      { id: 'ph-005', role: 'lifestyle', track: 'creative_only', urlMock: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400', filename: 'vestido_lifestyle.jpg' },
+    ],
+    videos: [
+      { id: 'vid-001', format: '9:16', track: 'creative_only', urlMock: '/mock/vestido_video.mp4', filename: 'vestido_video.mp4', duration: 15 },
+    ],
+    report: { score: 92, issues: [] },
+  },
+];
+
+// Listing Drafts
+export const seedListingDrafts: ListingDraft[] = [
+  {
+    id: 'ld-001',
+    productId: 'prod-001',
+    marketplaceKey: 'mercadolivre',
+    attributes: { condition: 'new', listing_type: 'gold_special', warranty: '30 dias' },
+    copy: {
+      title_short: 'Camiseta Básica Algodão Premium ModaFlex',
+      title_long_tail: 'Camiseta Básica Algodão Premium 100% ModaFlex Masculina Regular Fit Branca Preta',
+      bullets: ['100% Algodão Premium', 'Corte Regular Fit', 'Tecido macio e confortável', 'Disponível em branco e preto'],
+      aida: { A: 'Vista-se com estilo e conforto!', I: 'Camiseta em algodão premium de alta qualidade.', D: 'Tecido macio que se adapta ao seu corpo.', Act: 'Compre agora e receba em até 48h!' },
+      keywords: ['camiseta', 'básica', 'algodão', 'premium', 'modaflex', 'masculina'],
+    },
+    readiness: { ready: true, score: 92, blockers: [] },
+    publishGateKey: 'publish',
+    status: 'ready',
+    updatedAt: '2024-01-15T14:00:00Z',
+  },
+  {
+    id: 'ld-002',
+    productId: 'prod-002',
+    marketplaceKey: 'mercadolivre',
+    attributes: { condition: 'new', listing_type: 'gold_special' },
+    copy: {
+      title_short: 'Calça Jeans Slim Fit ModaFlex',
+      title_long_tail: 'Calça Jeans Masculina Slim Fit ModaFlex Azul Escuro Com Elastano',
+      bullets: ['98% Algodão 2% Elastano', 'Modelagem Slim Fit', 'Lavagem azul escuro clássica'],
+      aida: { A: 'O jeans que se adapta ao seu estilo!', I: 'Modelagem slim fit moderna e confortável.', D: 'Elastano para maior liberdade de movimento.', Act: 'Garanta a sua!' },
+      keywords: ['calça', 'jeans', 'slim', 'fit', 'masculina', 'elastano'],
+    },
+    readiness: { ready: false, score: 68, blockers: ['Falta descrição completa', 'Apenas 1 foto'] },
+    publishGateKey: 'publish',
+    status: 'draft',
+    updatedAt: '2024-01-14T10:00:00Z',
+  },
+  {
+    id: 'ld-003',
+    productId: 'prod-001',
+    marketplaceKey: 'shopee',
+    attributes: { condition: 'new', shop_voucher: true },
+    copy: {
+      title_short: 'Camiseta Básica Algodão Premium',
+      title_long_tail: 'Camiseta Básica Algodão 100% Premium Masculina Regular Fit',
+      bullets: ['Algodão Premium', 'Regular Fit', 'Confortável'],
+      aida: { A: 'Qualidade premium!', I: 'Tecido de alta qualidade.', D: 'Conforto o dia todo.', Act: 'Adicione ao carrinho!' },
+      keywords: ['camiseta', 'algodão', 'básica'],
+    },
+    readiness: { ready: false, score: 55, blockers: ['Gate de loja não aprovado', 'Faltam atributos obrigatórios'] },
+    publishGateKey: 'publish',
+    status: 'draft',
+    updatedAt: '2024-01-13T10:00:00Z',
+  },
+  {
+    id: 'ld-004',
+    productId: 'prod-003',
+    marketplaceKey: 'mercadolivre',
+    attributes: { condition: 'new', listing_type: 'gold_special' },
+    copy: {
+      title_short: 'Vestido Midi Floral Viscose',
+      title_long_tail: 'Vestido Midi Floral Feminino Viscose ModaFlex Azul Elegante',
+      bullets: ['100% Viscose', 'Estampa floral exclusiva', 'Tecido fluido e leve', 'Ideal para ocasiões especiais'],
+      aida: { A: 'Elegância em cada detalhe!', I: 'Vestido midi com estampa floral única.', D: 'Tecido leve e confortável.', Act: 'Compre o seu!' },
+      keywords: ['vestido', 'midi', 'floral', 'viscose', 'feminino'],
+    },
+    readiness: { ready: true, score: 95, blockers: [] },
+    publishGateKey: 'publish',
+    status: 'ready',
+    updatedAt: '2024-01-15T16:00:00Z',
+  },
+];
+
+// Merchant Feed Rows
+export const seedMerchantFeedRows: MerchantFeedRow[] = [
+  {
+    id: 'mf-001',
+    productId: 'prod-001',
+    fields: {
+      id: 'MF-CAMISETA-001',
+      link: 'https://modaflex.com/camiseta-basica',
+      image_link: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
+      availability: 'in_stock',
+      price: '79.90 BRL',
+      brand: 'ModaFlex',
+      gtin: '7891234567890',
+      mpn: 'MF-CAM-001',
+      condition: 'new',
+      google_product_category: 'Apparel & Accessories > Clothing > Shirts & Tops',
+      shipping_weight: '0.18 kg',
+    },
+    aiDisclosure: {
+      useStructured: true,
+      structured_title: { digitalSourceType: 'trained_algorithmic_media', content: 'Camiseta Básica Algodão Premium ModaFlex' },
+      structured_description: { digitalSourceType: 'trained_algorithmic_media', content: 'Camiseta básica em algodão premium 100%, corte regular fit, disponível em branco e preto.' },
+    },
+    validation: { valid: true, errors: [], warnings: [] },
+  },
+  {
+    id: 'mf-002',
+    productId: 'prod-002',
+    fields: {
+      id: 'MF-CALCA-001',
+      link: 'https://modaflex.com/calca-jeans',
+      image_link: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
+      availability: 'in_stock',
+      price: '189.90 BRL',
+      brand: 'ModaFlex',
+      mpn: 'MF-CAL-001',
+      condition: 'new',
+      google_product_category: 'Apparel & Accessories > Clothing > Pants',
+      shipping_weight: '0.45 kg',
+    },
+    aiDisclosure: { useStructured: false },
+    validation: { valid: false, errors: ['GTIN ausente'], warnings: ['Descrição pode ser melhorada'] },
+  },
+  {
+    id: 'mf-003',
+    productId: 'prod-003',
+    fields: {
+      id: 'MF-VESTIDO-001',
+      link: 'https://modaflex.com/vestido-floral',
+      image_link: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
+      availability: 'in_stock',
+      price: '159.90 BRL',
+      brand: 'ModaFlex',
+      gtin: '7891234567893',
+      mpn: 'MF-VES-001',
+      condition: 'new',
+      google_product_category: 'Apparel & Accessories > Clothing > Dresses',
+      shipping_weight: '0.22 kg',
+    },
+    aiDisclosure: {
+      useStructured: true,
+      structured_title: { digitalSourceType: 'trained_algorithmic_media', content: 'Vestido Midi Floral Viscose ModaFlex' },
+      structured_description: { digitalSourceType: 'trained_algorithmic_media', content: 'Vestido midi elegante com estampa floral exclusiva em viscose fluida.' },
+    },
+    validation: { valid: true, errors: [], warnings: [] },
+  },
+  {
+    id: 'mf-004',
+    productId: 'prod-004',
+    fields: {
+      id: 'MF-KIT-001',
+      link: 'https://modaflex.com/kit-cuecas',
+      image_link: '',
+      availability: 'in_stock',
+      price: '69.90 BRL',
+      brand: 'ModaFlex',
+      mpn: 'MF-KIT-001',
+      condition: 'new',
+      google_product_category: 'Apparel & Accessories > Clothing > Underwear',
+      shipping_weight: '',
+    },
+    aiDisclosure: { useStructured: false },
+    validation: { valid: false, errors: ['Imagem ausente', 'Peso de envio ausente'], warnings: ['GTIN recomendado'] },
+  },
+];
+
+// War Room Tasks
+const today = new Date().toISOString().split('T')[0];
+export const seedWarTasks: WarTask[] = [
+  { id: 'wt-001', date: today, marketplaceKey: 'mercadolivre', type: 'setup', title: 'Aprovar gate "Loja Aprovada" no ML', priority: 1, impact: 95, ownerRole: 'auditor', status: 'todo', notes: 'Verificação PJ enviada, aguardando aprovação do auditor' },
+  { id: 'wt-002', date: today, marketplaceKey: 'shopee', type: 'setup', title: 'Completar cadastro da loja Shopee', priority: 2, impact: 85, ownerRole: 'cadastro', status: 'doing', notes: 'Falta enviar selfie do sócio' },
+  { id: 'wt-003', date: today, marketplaceKey: 'mercadolivre', type: 'listing', title: 'Melhorar fotos da Calça Jeans', priority: 3, impact: 70, ownerRole: 'catalogo', status: 'todo' },
+  { id: 'wt-004', date: today, marketplaceKey: 'mercadolivre', type: 'merchant', title: 'Adicionar GTIN na Calça Jeans', priority: 2, impact: 60, ownerRole: 'catalogo', status: 'todo' },
+  { id: 'wt-005', date: today, marketplaceKey: 'mercadolivre', type: 'merchant', title: 'Corrigir erros no feed do Kit Cuecas', priority: 1, impact: 80, ownerRole: 'catalogo', status: 'todo' },
+  { id: 'wt-006', date: today, marketplaceKey: 'mercadolivre', type: 'optimization', title: 'Revisar keywords dos anúncios prontos', priority: 4, impact: 45, ownerRole: 'catalogo', status: 'todo' },
+  { id: 'wt-007', date: today, marketplaceKey: 'shopee', type: 'listing', title: 'Criar drafts de anúncio para Shopee', priority: 3, impact: 50, ownerRole: 'catalogo', status: 'todo' },
+];
+
+// Activity Feed
+export const seedActivities: Activity[] = [
+  { id: 'act-001', type: 'gate_approved', title: 'Gate aprovado', description: 'Gate "Empresa Pronta" aprovado para Mercado Livre', timestamp: '2024-01-11T14:00:00Z', userId: 'usr-004' },
+  { id: 'act-002', type: 'product_created', title: 'Produto criado', description: 'Produto "Camiseta Básica Algodão Premium" adicionado ao catálogo', timestamp: '2024-01-05T10:00:00Z', userId: 'usr-003' },
+  { id: 'act-003', type: 'listing_ready', title: 'Anúncio pronto', description: 'Anúncio da Camiseta Básica está pronto para ML', timestamp: '2024-01-15T14:00:00Z', userId: 'usr-003' },
+  { id: 'act-004', type: 'evidence_uploaded', title: 'Evidência enviada', description: 'Comprovante CNPJ enviado para gate ML', timestamp: '2024-01-10T10:00:00Z', userId: 'usr-002' },
+  { id: 'act-005', type: 'ai_run', title: 'AI processou produto', description: 'Pipeline de AI concluído para Vestido Midi Floral', timestamp: '2024-01-14T16:00:00Z' },
+  { id: 'act-006', type: 'task_completed', title: 'Tarefa concluída', description: 'Configuração inicial do ML finalizada', timestamp: '2024-01-12T11:00:00Z', userId: 'usr-002' },
+];
