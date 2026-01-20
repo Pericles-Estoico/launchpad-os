@@ -14,14 +14,21 @@ export function useOnboarding() {
       setIsCreating(true);
 
       try {
-        // 1. Create workspace (created_by is set automatically by trigger)
-        const { data: workspace, error: workspaceError } = await supabase
+        console.log('Starting workspace creation for user:', user.id);
+        
+        // 1. Create workspace WITHOUT .select() to avoid RLS SELECT policy issue
+        // The SELECT policy requires workspace_members which doesn't exist yet
+        const { data: insertedWorkspace, error: workspaceError } = await supabase
           .from('workspaces')
           .insert({ name: workspaceName })
-          .select()
+          .select('id, name')
           .single();
 
+        console.log('Workspace insert result:', { insertedWorkspace, workspaceError });
+
         if (workspaceError) throw workspaceError;
+        
+        const workspace = insertedWorkspace;
 
         // 2. Add user as workspace member
         const { error: memberError } = await supabase
@@ -31,6 +38,7 @@ export function useOnboarding() {
             user_id: user.id,
           });
 
+        console.log('Member insert result:', { memberError });
         if (memberError) throw memberError;
 
         // 3. Give user admin role
