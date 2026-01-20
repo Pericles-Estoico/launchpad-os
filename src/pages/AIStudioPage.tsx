@@ -45,9 +45,9 @@ const PIPELINE_STAGES: { key: AIStage; label: string; icon: React.ElementType; d
   { key: 'img_enhance', label: 'Otimizar Fotos', icon: ImageIcon, description: 'Melhora fotos para listing' },
 ];
 
-const CREATIVE_STAGES: { key: AIStage; label: string; icon: React.ElementType }[] = [
-  { key: 'img_generate', label: 'Gerar Criativos', icon: ImageIcon },
-  { key: 'video_generate', label: 'Gerar Vídeos', icon: Video },
+const CREATIVE_STAGES: { key: AIStage; label: string; icon: React.ElementType; description: string }[] = [
+  { key: 'img_generate', label: 'Gerar Criativos', icon: ImageIcon, description: 'Cria imagens lifestyle e mockups' },
+  { key: 'video_generate', label: 'Gerar Vídeos', icon: Video, description: 'Gera vídeos curtos para ads' },
 ];
 
 export default function AIStudioPage() {
