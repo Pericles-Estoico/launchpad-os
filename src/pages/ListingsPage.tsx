@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Search, 
@@ -42,6 +43,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function ListingsPage() {
+  const navigate = useNavigate();
   const { listingDrafts, products, selectedMarketplace, setSelectedMarketplace } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'ready' | 'draft'>('all');
@@ -156,7 +158,11 @@ export default function ListingsPage() {
                       const product = products.find(p => p.id === listing.productId);
                       
                       return (
-                        <TableRow key={listing.id}>
+                        <TableRow 
+                          key={listing.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => navigate(`/listings/${listing.id}`)}
+                        >
                           <TableCell>
                             <div className="max-w-[300px]">
                               <p className="font-medium truncate">{listing.copy.title_short}</p>
@@ -209,11 +215,11 @@ export default function ListingsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/listings/${listing.id}`); }}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   Visualizar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/listings/${listing.id}`); }}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Editar
                                 </DropdownMenuItem>

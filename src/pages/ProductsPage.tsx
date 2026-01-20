@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
@@ -39,6 +40,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function ProductsPage() {
+  const navigate = useNavigate();
   const { products, mediaSets, currentUser, addProduct, deleteProduct } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRecipe, setFilterRecipe] = useState<ProductRecipe | 'all'>('all');
@@ -244,7 +246,11 @@ export default function ProductsPage() {
                   const heroImage = mediaSet?.photos.find(p => p.role === 'hero');
                   
                   return (
-                    <TableRow key={product.id}>
+                    <TableRow 
+                      key={product.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/products/${product.id}`)}
+                    >
                       <TableCell>
                         <div className="h-10 w-10 rounded-lg border bg-muted overflow-hidden">
                           {heroImage ? (
@@ -317,7 +323,7 @@ export default function ProductsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/products/${product.id}`); }}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
@@ -328,7 +334,7 @@ export default function ProductsPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               className="text-destructive"
-                              onClick={() => handleDeleteProduct(product.id)}
+                              onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id); }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Excluir

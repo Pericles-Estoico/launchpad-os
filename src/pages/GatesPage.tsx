@@ -69,11 +69,20 @@ export default function GatesPage() {
 
   const handleSubmitGate = (gate: GateRun) => {
     const gateDef = getGateDef(gate);
+    
+    // Validar checklist obrigatório
     const requiredChecks = gateDef?.checklist.filter(c => c.required) || [];
     const allChecked = requiredChecks.every(c => gate.checks[c.key]);
 
     if (!allChecked) {
       toast.error('Complete todos os itens obrigatórios antes de submeter');
+      return;
+    }
+
+    // Validar evidências obrigatórias
+    const requiredEvidenceTypes = gateDef?.evidenceTypes || [];
+    if (requiredEvidenceTypes.length > 0 && gate.evidence.length === 0) {
+      toast.error(`Anexe pelo menos uma evidência (tipos aceitos: ${requiredEvidenceTypes.join(', ')})`);
       return;
     }
 
