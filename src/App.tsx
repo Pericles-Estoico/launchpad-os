@@ -8,8 +8,10 @@ import Dashboard from "./pages/Dashboard";
 import StoresPage from "./pages/StoresPage";
 import GatesPage from "./pages/GatesPage";
 import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import AIStudioPage from "./pages/AIStudioPage";
 import ListingsPage from "./pages/ListingsPage";
+import ListingEditorPage from "./pages/ListingEditorPage";
 import MerchantPage from "./pages/MerchantPage";
 import WarRoomPage from "./pages/WarRoomPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -29,8 +31,10 @@ const App = () => (
             <Route path="/stores" element={<StoresPage />} />
             <Route path="/gates" element={<GatesPage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/ai-studio" element={<AIStudioPage />} />
             <Route path="/listings" element={<ListingsPage />} />
+            <Route path="/listings/:id" element={<ListingEditorPage />} />
             <Route path="/merchant" element={<MerchantPage />} />
             <Route path="/war-room" element={<WarRoomPage />} />
             <Route path="/settings" element={<SettingsPage />} />
