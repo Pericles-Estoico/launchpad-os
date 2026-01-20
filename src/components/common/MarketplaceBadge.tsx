@@ -6,9 +6,10 @@ interface MarketplaceBadgeProps {
   marketplace: MarketplaceKey;
   size?: 'sm' | 'md';
   showWave?: boolean;
+  className?: string;
 }
 
-export function MarketplaceBadge({ marketplace, size = 'md', showWave = false }: MarketplaceBadgeProps) {
+export function MarketplaceBadge({ marketplace, size = 'md', showWave = false, className }: MarketplaceBadgeProps) {
   const config = MARKETPLACE_CONFIG[marketplace];
   
   const colorClasses: Record<string, string> = {
@@ -26,7 +27,8 @@ export function MarketplaceBadge({ marketplace, size = 'md', showWave = false }:
       className={cn(
         'font-medium border',
         colorClasses[config.color],
-        size === 'sm' ? 'text-xs px-1.5 py-0' : 'text-xs'
+        size === 'sm' ? 'text-xs px-1.5 py-0' : 'text-xs',
+        className
       )}
     >
       {config.shortName}

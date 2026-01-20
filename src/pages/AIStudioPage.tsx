@@ -51,7 +51,7 @@ const CREATIVE_STAGES: { key: AIStage; label: string; icon: React.ElementType; d
 ];
 
 export default function AIStudioPage() {
-  const { products, mediaSets, addAIRun, aiRuns } = useAppStore();
+  const { products, mediaSets, addAIRun, aiRuns, updateProduct, updateMediaSet, addListingDraft, addMerchantFeedRow } = useAppStore();
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [generateCreativesEnabled, setGenerateCreativesEnabled] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -130,7 +130,76 @@ export default function AIStudioPage() {
     toast.success('Pipeline concluído com sucesso!');
   };
 
-  const allStages = generateCreativesEnabled 
+  const handleApplyToProduct = () => {
+    if (!selectedProduct) return;
+
+    // Atualizar produto com atributos preenchidos
+    if (stageResults.attrs) {
+      updateProduct(selectedProduct.id, {
+        ...stageResults.attrs.filledAttributes,
+      });
+    }
+
+    // Atualizar MediaSet com fotos enhanced
+    if (stageResults.img_enhance && productMediaSet) {
+      updateMediaSet(productMediaSet.id, {
+        photos: stageResults.img_enhance.enhancedPhotos,
+        report: { ...productMediaSet.report, score: 95 },
+      });
+    }
+
+    toast.success('Resultados aplicados ao produto!');
+  };
+
+  const handleCreateDraft = () => {
+    if (!selectedProduct || !stageResults.copy) {
+      toast.error('Execute o pipeline primeiro para gerar o copy');
+      return;
+    }
+
+    const newDraft = {
+      id: `draft-${Date.now()}`,
+      productId: selectedProduct.id,
+      marketplaceKey: 'mercadolivre' as const,
+      attributes: stageResults.attrs?.filledAttributes || {},
+      copy: stageResults.copy,
+      readiness: { 
+        ready: stageResults.guard?.passed || false, 
+        score: stageResults.guard?.passed ? 85 : 60, 
+        blockers: stageResults.guard?.blockers || [] 
+      },
+      publishGateKey: 'publish',
+      status: 'draft' as const,
+      updatedAt: new Date().toISOString(),
+    };
+
+    addListingDraft(newDraft);
+
+    // Também criar registro no Merchant Feed se tiver resultado de merchant
+    if (stageResults.merchant) {
+      addMerchantFeedRow({
+        id: `mf-${Date.now()}`,
+        productId: selectedProduct.id,
+        fields: {
+          id: selectedProduct.skuMaster,
+          link: `https://loja.com/produto/${selectedProduct.skuMaster}`,
+          image_link: productMediaSet?.photos[0]?.urlMock || '',
+          availability: 'in_stock',
+          price: `${selectedProduct.priceBRL.toFixed(2)} BRL`,
+          brand: selectedProduct.brand,
+          condition: 'new',
+          google_product_category: selectedProduct.category || 'Vestuário e Acessórios',
+          shipping_weight: `${(selectedProduct.dims?.weight_g || 200) / 1000} kg`,
+        },
+        aiDisclosure: stageResults.merchant.aiDisclosure,
+        validation: { valid: true, errors: [], warnings: [] },
+      });
+    }
+
+    toast.success('Draft de anúncio criado!');
+  };
+
+  const allStages = generateCreativesEnabled
     ? [...PIPELINE_STAGES, ...CREATIVE_STAGES]
     : PIPELINE_STAGES;
 
@@ -385,10 +454,10 @@ export default function AIStudioPage() {
             </div>
 
             <div className="mt-4 flex gap-2">
-              <Button>
+              <Button onClick={handleApplyToProduct} disabled={!stageResults.attrs}>
                 Aplicar ao Produto
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleCreateDraft} disabled={!stageResults.copy}>
                 Criar Draft de Anúncio
               </Button>
             </div>
