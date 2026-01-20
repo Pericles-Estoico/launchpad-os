@@ -14,10 +14,10 @@ export function useOnboarding() {
       setIsCreating(true);
 
       try {
-        // 1. Create workspace
+        // 1. Create workspace with created_by
         const { data: workspace, error: workspaceError } = await supabase
           .from('workspaces')
-          .insert({ name: workspaceName })
+          .insert({ name: workspaceName, created_by: user.id })
           .select()
           .single();
 
