@@ -17,7 +17,7 @@ export function useOnboarding() {
         // 1. Create workspace (created_by is set automatically by trigger)
         const { data: workspace, error: workspaceError } = await supabase
           .from('workspaces')
-          .insert({ name: workspaceName })
+          .insert({ name: workspaceName, created_by: user.id })
           .select()
           .single();
 
