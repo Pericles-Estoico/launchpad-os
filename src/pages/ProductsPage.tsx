@@ -33,6 +33,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAppStore, canAccess } from '@/store/useAppStore';
 import { Product, ProductRecipe } from '@/lib/types';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -113,7 +118,7 @@ export default function ProductsPage() {
             {products.length} produtos cadastrados
           </p>
         </div>
-        {hasAccess && (
+        {hasAccess ? (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -180,6 +185,20 @@ export default function ProductsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button disabled>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Produto
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              Você não tem permissão para adicionar produtos. Fale com um administrador.
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
 

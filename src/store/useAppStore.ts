@@ -60,7 +60,18 @@ interface AppState {
   
   // Requirements
   requirements: RequirementsLibraryItem[];
+  addRequirement: (requirement: RequirementsLibraryItem) => void;
   updateRequirements: (id: string, updates: Partial<RequirementsLibraryItem>) => void;
+  deleteRequirement: (id: string) => void;
+  
+  // Gate Defs
+  addGateDef: (gateDef: GateDef) => void;
+  updateGateDef: (id: string, updates: Partial<GateDef>) => void;
+  deleteGateDef: (id: string) => void;
+  
+  // Users
+  addUser: (user: User) => void;
+  updateUser: (id: string, updates: Partial<User>) => void;
   
   // Listings
   listingDrafts: ListingDraft[];
@@ -148,10 +159,42 @@ export const useAppStore = create<AppState>((set) => ({
         : gr
     ),
   })),
+
+  addRequirement: (requirement) => set((state) => ({
+    requirements: [...state.requirements, requirement],
+  })),
   
   updateRequirements: (id, updates) => set((state) => ({
     requirements: state.requirements.map((r) =>
       r.id === id ? { ...r, ...updates } : r
+    ),
+  })),
+
+  deleteRequirement: (id) => set((state) => ({
+    requirements: state.requirements.filter((r) => r.id !== id),
+  })),
+
+  addGateDef: (gateDef) => set((state) => ({
+    gateDefs: [...state.gateDefs, gateDef],
+  })),
+
+  updateGateDef: (id, updates) => set((state) => ({
+    gateDefs: state.gateDefs.map((g) =>
+      g.id === id ? { ...g, ...updates } : g
+    ),
+  })),
+
+  deleteGateDef: (id) => set((state) => ({
+    gateDefs: state.gateDefs.filter((g) => g.id !== id),
+  })),
+
+  addUser: (user) => set((state) => ({
+    users: [...state.users, user],
+  })),
+
+  updateUser: (id, updates) => set((state) => ({
+    users: state.users.map((u) =>
+      u.id === id ? { ...u, ...updates } : u
     ),
   })),
   

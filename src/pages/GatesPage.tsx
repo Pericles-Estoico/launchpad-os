@@ -20,6 +20,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAppStore, canAccess } from '@/store/useAppStore';
 import { MarketplaceBadge } from '@/components/common/MarketplaceBadge';
 import { GateStatusBadge } from '@/components/common/GateStatusBadge';
@@ -378,27 +383,59 @@ export default function GatesPage() {
                 Fechar
               </Button>
               
-              {selectedGate.status === 'in_progress' && isCadastro && (
-                <Button onClick={() => handleSubmitGate(selectedGate)}>
-                  <Send className="mr-2 h-4 w-4" />
-                  Submeter para Aprovação
-                </Button>
+              {selectedGate.status === 'in_progress' && (
+                isCadastro ? (
+                  <Button onClick={() => handleSubmitGate(selectedGate)}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Submeter para Aprovação
+                  </Button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button disabled>
+                          <Send className="mr-2 h-4 w-4" />
+                          Submeter para Aprovação
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Apenas usuários com permissão de Cadastro podem submeter gates
+                    </TooltipContent>
+                  </Tooltip>
+                )
               )}
               
-              {selectedGate.status === 'submitted' && isAuditor && (
-                <>
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => handleRejectGate(selectedGate)}
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Rejeitar
-                  </Button>
-                  <Button onClick={() => handleApproveGate(selectedGate)}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Aprovar
-                  </Button>
-                </>
+              {selectedGate.status === 'submitted' && (
+                isAuditor ? (
+                  <>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => handleRejectGate(selectedGate)}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Rejeitar
+                    </Button>
+                    <Button onClick={() => handleApproveGate(selectedGate)}>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Aprovar
+                    </Button>
+                  </>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button disabled>
+                          <Clock className="mr-2 h-4 w-4" />
+                          Aguardando Auditor
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Este gate está aguardando aprovação de um auditor
+                    </TooltipContent>
+                  </Tooltip>
+                )
               )}
             </DialogFooter>
           </DialogContent>

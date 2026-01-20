@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, 
   Play, 
@@ -51,6 +52,7 @@ const CREATIVE_STAGES: { key: AIStage; label: string; icon: React.ElementType; d
 ];
 
 export default function AIStudioPage() {
+  const navigate = useNavigate();
   const { products, mediaSets, addAIRun, aiRuns, updateProduct, updateMediaSet, addListingDraft, addMerchantFeedRow } = useAppStore();
   const [selectedProductId, setSelectedProductId] = useState<string>('');
   const [generateCreativesEnabled, setGenerateCreativesEnabled] = useState(false);
@@ -197,6 +199,9 @@ export default function AIStudioPage() {
     }
 
     toast.success('Draft de anúncio criado!');
+    
+    // Navegar para o listing criado
+    navigate(`/listings/${newDraft.id}`);
   };
 
   const allStages = generateCreativesEnabled
