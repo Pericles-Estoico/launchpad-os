@@ -1,6 +1,12 @@
 const useRemoteDb = import.meta.env.VITE_USE_REMOTE_DB === 'true';
 const forceLocalDb = import.meta.env.VITE_USE_LOCAL_DB === 'true';
+const localOverride =
+  typeof window !== 'undefined' &&
+  (localStorage.getItem('lp_force_local') === 'true' ||
+    new URLSearchParams(window.location.search).get('local') === '1');
+
 export const isLocalMode =
+  localOverride ||
   forceLocalDb ||
   (!useRemoteDb &&
     (import.meta.env.VITE_USE_LOCAL_DB !== 'false' ||
