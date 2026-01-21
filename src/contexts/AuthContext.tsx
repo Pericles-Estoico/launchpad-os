@@ -2,6 +2,13 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import {
+  clearLocalStorage,
+  getLocalProfile,
+  getLocalWorkspaceId,
+  isLocalMode,
+  setLocalProfile,
+} from '@/lib/localMode';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -17,6 +24,7 @@ interface AuthContextType {
   role: AppRole | null;
   workspaceId: string | null;
   isLoading: boolean;
+  setWorkspaceId: (workspaceId: string | null) => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -31,6 +39,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const setLocalSessionState = (nextProfile?: AuthContextType['profile']) => {
+    const fallbackProfile = nextProfile ?? {
+      id: 'local-user',
+      name: 'Usuário Local',
+      email: 'local@launchpad.os',
+      avatar_url: null,
+    };
+
+    const localUser = {
+      id: fallbackProfile.id,
+      email: fallbackProfile.email,
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      app_metadata: {},
+      user_metadata: { name: fallbackProfile.name },
+    } as User;
+
+    const localSession = {
+      access_token: 'local-access-token',
+      refresh_token: 'local-refresh-token',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
+      user: localUser,
+    } as Session;
+
+    setSession(localSession);
+    setUser(localUser);
+    setProfile(fallbackProfile);
+    setRole('admin');
+    setWorkspaceId(getLocalWorkspaceId());
+  };
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -72,6 +113,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (isLocalMode) {
+      const storedProfile = getLocalProfile();
+      if (storedProfile) {
+        setLocalSessionState(storedProfile);
+      } else {
+        const defaultProfile = {
+          id: 'local-user',
+          name: 'Usuário Local',
+          email: 'local@launchpad.os',
+          avatar_url: null,
+        };
+        setLocalProfile(defaultProfile);
+        setLocalSessionState(defaultProfile);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -104,6 +163,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (isLocalMode) {
+      const storedProfile = getLocalProfile();
+      const nextProfile = storedProfile ?? {
+        id: 'local-user',
+        name: email.split('@')[0] || 'Usuário Local',
+        email,
+        avatar_url: null,
+      };
+      setLocalProfile(nextProfile);
+      setLocalSessionState(nextProfile);
+      setIsLoading(false);
+      return { error: null };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -112,6 +185,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
+    if (isLocalMode) {
+      const nextProfile = {
+        id: 'local-user',
+        name,
+        email,
+        avatar_url: null,
+      };
+      setLocalProfile(nextProfile);
+      setLocalSessionState(nextProfile);
+      setIsLoading(false);
+      return { error: null };
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -126,6 +212,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (isLocalMode) {
+      clearLocalStorage();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setRole(null);
+      setWorkspaceId(null);
+      return;
+    }
+
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
@@ -142,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         workspaceId,
+        setWorkspaceId,
         isLoading,
         signIn,
         signUp,

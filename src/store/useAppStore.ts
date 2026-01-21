@@ -37,6 +37,7 @@ interface AppState {
   
   // Workspace
   workspace: Workspace;
+  setWorkspace: (updates: Partial<Workspace>) => void;
   
   // Users
   users: User[];
@@ -121,6 +122,11 @@ export const useAppStore = create<AppState>((set) => ({
   
   // Actions
   setCurrentUser: (user) => set({ currentUser: user }),
+
+  setWorkspace: (updates) =>
+    set((state) => ({
+      workspace: { ...state.workspace, ...updates },
+    })),
   
   addProduct: (product) => set((state) => ({ 
     products: [...state.products, product] 
